@@ -705,9 +705,23 @@
         }
 
         // 🌟 完美修正點：拿掉原本打錯的 initUnitSelectMenu menu(); 改成精準執行選單
+        window.getClassroomShareParams = function() {
+            return {
+                pool: JSON.stringify(MY_WORD_POOL),
+                mode: document.getElementById('mode-select').value
+            };
+        };
+
         window.onload = function() {
-            initUnitSelectMenu(); 
-            MY_WORD_POOL = [...DEFAULT_UNITS["Animals 動物"]];
+            initUnitSelectMenu();
+            const p = new URLSearchParams(window.location.search);
+            const sharedPool = p.get('pool');
+            if (sharedPool) {
+                try { MY_WORD_POOL = JSON.parse(sharedPool); } catch(e) { MY_WORD_POOL = []; }
+            } else {
+                MY_WORD_POOL = [...DEFAULT_UNITS["Animals 動物"]];
+            }
+            if (p.get('mode')) document.getElementById('mode-select').value = p.get('mode');
             updatePoolDisplay(); 
             drawBackupPikminImage();
             setupNewGame();

@@ -574,7 +574,16 @@
             else { statusEl.innerText = `ADV: BLUE +${Math.abs(diff)}`; statusEl.style.color = "#0984e3"; }
         }
 
+        window.getClassroomShareParams = function() {
+            return { pool: JSON.stringify(MY_WORD_POOL) };
+        };
+
         window.onload = function() {
+            const p = new URLSearchParams(window.location.search);
+            const sharedPool = p.get('pool');
+            if (sharedPool) {
+                try { MY_WORD_POOL = JSON.parse(sharedPool); } catch(e) {}
+            }
             updatePoolDisplay(); 
             setupNewGame();
         };

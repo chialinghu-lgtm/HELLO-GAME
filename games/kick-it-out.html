@@ -677,6 +677,30 @@
     document.getElementById('winRankings').innerHTML = html;
     document.getElementById('winModal').style.display = 'flex';
   }
+
+
+  // ===== 課堂 QR：分享老師後台設定 =====
+  window.getClassroomShareParams = function() {
+    return {
+      q: document.getElementById('cfgQuestion').value,
+      a: document.getElementById('cfgAnswer').value,
+      items: document.getElementById('cfgItems').value,
+      players: document.getElementById('cfgPlayerCount').value,
+      duration: document.getElementById('cfgDuration').value
+    };
+  };
+
+  (function loadClassroomSharedSettings() {
+    const p = new URLSearchParams(window.location.search);
+    const fields = {q:'cfgQuestion', a:'cfgAnswer', items:'cfgItems', players:'cfgPlayerCount', duration:'cfgDuration'};
+    let hasShared = false;
+    Object.entries(fields).forEach(([key,id]) => {
+      const v = p.get(key);
+      if (v !== null) { document.getElementById(id).value = v; hasShared = true; }
+    });
+    if (hasShared) setTimeout(() => saveAdminAndStart(), 0);
+  })();
+
 </script>
 
 </body>

@@ -282,13 +282,18 @@
     let currentInputA = [], currentInputB = [];
 
     function loadVocabConfig() {
-        const savedData = localStorage.getItem('vocab_pool_castle_vfinal_stone');
+        const sharedData = new URLSearchParams(window.location.search).get('vocab');
+        const savedData = sharedData || localStorage.getItem('vocab_pool_castle_vfinal_stone');
         if (savedData) {
             globalWordPool = savedData.split(',').map(item => item.trim().toLowerCase()).filter(item => item.length > 0);
             document.getElementById('vocab-input').value = savedData;
         }
         pickRandomSixWords();
     }
+
+    window.getClassroomShareParams = function() {
+        return { vocab: document.getElementById('vocab-input').value.trim() };
+    };
 
     function pickRandomSixWords() {
         if (globalWordPool.length < 6) {

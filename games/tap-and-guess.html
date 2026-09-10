@@ -225,7 +225,19 @@
         let isGameOver = false;
         let autoCloseTimer = null;
 
+        window.getClassroomShareParams = function() {
+            return {
+                title: document.getElementById('inputTitle').value,
+                correct: document.getElementById('inputCorrectMsg').value,
+                options: document.getElementById('inputOptions').value
+            };
+        };
+
         window.onload = function() {
+            const p = new URLSearchParams(window.location.search);
+            if (p.get('title')) document.getElementById('inputTitle').value = p.get('title');
+            if (p.get('correct')) document.getElementById('inputCorrectMsg').value = p.get('correct');
+            if (p.get('options')) document.getElementById('inputOptions').value = p.get('options');
             updateGame();
         };
 

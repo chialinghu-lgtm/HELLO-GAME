@@ -508,6 +508,26 @@
     }
 
     renderHistoryBoard();
+
+
+    // ===== 課堂 QR：分享題庫與人數 =====
+    window.getClassroomShareParams = function() {
+        return {
+            questions: JSON.stringify(questionBank),
+            players: document.getElementById('player-count') ? document.getElementById('player-count').value : ''
+        };
+    };
+
+    (function loadClassroomSharedSettings() {
+        const p = new URLSearchParams(window.location.search);
+        const q = p.get('questions');
+        const pc = p.get('players');
+        if (q) {
+            try { questionBank = JSON.parse(q); } catch(e) { console.warn('Shared baseball questions invalid', e); }
+        }
+        if (pc && document.getElementById('player-count')) document.getElementById('player-count').value = pc;
+    })();
+
 </script>
 </body>
 </html>

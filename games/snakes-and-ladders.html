@@ -659,6 +659,25 @@
     document.getElementById('gamePanel').style.display = 'none';
     document.getElementById('adminPanel').style.display = 'block';
   }
+
+
+  // ===== 課堂 QR：分享玩家數與單字 =====
+  window.getClassroomShareParams = function() {
+    return {
+      players: document.getElementById('playerCount').value,
+      words: document.getElementById('wordList').value.trim()
+    };
+  };
+
+  (function loadClassroomSharedSettings() {
+    const p = new URLSearchParams(window.location.search);
+    const players = p.get('players');
+    const words = p.get('words');
+    if (players) document.getElementById('playerCount').value = players;
+    if (words) document.getElementById('wordList').value = words;
+    if (players || words) setTimeout(() => initAndBuildGame(), 0);
+  })();
+
 </script>
 
 </body>

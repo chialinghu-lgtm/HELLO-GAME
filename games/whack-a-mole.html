@@ -543,6 +543,35 @@
         function closeModal() {
             document.getElementById('winModal').classList.remove('active');
         }
+
+
+        // ===== 課堂 QR：把老師目前設定分享給學生 =====
+        window.getClassroomShareParams = function() {
+            return {
+                words: document.getElementById('inputWords').value.trim(),
+                stay: document.getElementById('inputStayTime').value,
+                goal: document.getElementById('inputGoalScore').value,
+                penalty: document.getElementById('inputPenalty').value
+            };
+        };
+
+        (function loadClassroomSharedSettings() {
+            const p = new URLSearchParams(window.location.search);
+            const sw = p.get('words'), ss = p.get('stay'), sg = p.get('goal'), sp = p.get('penalty');
+            if (sw) {
+                document.getElementById('inputWords').value = sw;
+                words = sw.split(',').map(w => w.trim()).filter(Boolean);
+            }
+            if (ss) { document.getElementById('inputStayTime').value = ss; stayTime = Math.max(0.4, parseFloat(ss) || 1.5); }
+            if (sg) { document.getElementById('inputGoalScore').value = sg; goalScore = Math.max(0, parseInt(sg) || 0); }
+            if (sp) { document.getElementById('inputPenalty').value = sp; penalty = Math.max(0, parseInt(sp) || 0); }
+            if (sw || ss || sg || sp) {
+                document.getElementById('goalText').innerText = goalScore > 0 ? `/ ${goalScore}` : `(無限制)`;
+                score = 0;
+                document.getElementById('scoreDisplay').innerText = score;
+            }
+        })();
+
     </script>
 </body>
 </html>
