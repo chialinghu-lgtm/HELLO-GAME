@@ -122,16 +122,25 @@
             url = new URL(window.location.href);
         }
         url.searchParams.delete('group');
-        url.searchParams.delete('team');
-        if (targetGroup) url.searchParams.set('group', targetGroup);
-        if (targetTeam) url.searchParams.set('team', targetTeam);
-        return url.toString();
-    }
+url.searchParams.delete('team');
 
-    function renderQRCode(targetUrl) {
-        const container = document.getElementById('crQrCodeContainer');
-        const preview = document.getElementById('crUrlPreview');
-        if (!container) return;
+if (targetGroup) url.searchParams.set('group', targetGroup);
+if (targetTeam) url.searchParams.set('team', targetTeam);
+
+// 把目前遊戲的老師設定一起加入 QR Code 網址
+if (typeof window.getClassroomShareParams === 'function') {
+    const gameParams = window.getClassroomShareParams();
+
+    if (gameParams) {
+        Object.entries(gameParams).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                url.searchParams.set(key, value);
+            }
+        });
+    }
+}
+
+return url.toString();
 
         container.innerHTML = '';
         preview.innerText = targetUrl;
