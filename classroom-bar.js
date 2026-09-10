@@ -128,88 +128,42 @@
         return url.toString();
     }
 
-    function renderQRCode(targetUrl) {
-        const container = document.getElementById('crQrCodeContainer');
-        const preview = document.getElementById('crUrlPreview');
-        if (!container) return;
+    function renderQRCode(targetUrl, retryCount = 0) {
+    const container = document.getElementById('crQrCodeContainer');
+    const preview = document.getElementById('crUrlPreview');
+    if (!container) return;
 
+    preview.innerText = targetUrl;
+
+    if (window.QRCode) {
         container.innerHTML = '';
-        preview.innerText = targetUrl;
 
-        if (window.QRCode) {
+        try {
             qrCodeInstance = new window.QRCode(container, {
                 text: targetUrl,
-                width: 200,
-                height: 200,
-                colorDark: '#2c3e50',
+                width: 220,
+                height: 220,
+                colorDark: '#000000',
                 colorLight: '#ffffff',
                 correctLevel: window.QRCode.CorrectLevel.M
             });
-        } else {
-            container.innerHTML = '<p style="color:#7f8c8d; font-size:12px;">QR Code 模組載入中...</p>';
-        }
-    }
-
-    function updateCurrentTarget(g, t) {
-        currentGroup = g || '';
-        currentTeam = t || '';
-        const targetUrl = getCleanPageUrl(currentGroup, currentTeam);
-        renderQRCode(targetUrl);
-
-        // 更新徽章文字
-        const badge = document.getElementById('crGroupBadge');
-        if (badge) {
-            badge.className = 'classroom-group-badge';
-            if (currentGroup) {
-                badge.innerText = `🎯 第 ${currentGroup} 組`;
-            } else if (currentTeam === 'blue') {
-                badge.innerText = `🔵 藍隊`;
-                badge.classList.add('team-blue');
-            } else if (currentTeam === 'red') {
-                badge.innerText = `🔴 紅隊`;
-                badge.classList.add('team-red');
-            } else {
-                badge.innerText = `👥 設定組別`;
-            }
+        } catch (err) {
+            console.error('QR Code 產生失敗：', err);
+            container.innerHTML =
+                '<p style="color:#c0392b;font-size:14px;">QR Code 產生失敗，請重新整理頁面。</p>';
         }
 
-        // 更新網址歷史（不刷新頁面）
-        window.history.replaceState({}, '', targetUrl);
-    }
+    } else if (retryCount < 20) {
+        container.innerHTML =
+            '<p style="color:#7f8c8d;font-size:12px;">QR Code 模組載入中...</p>';
 
-    function openModal() {
-        const modal = document.getElementById('classroomModal');
-        if (!modal) return;
-        modal.style.display = 'flex';
-        renderQRCode(getCleanPageUrl(currentGroup, currentTeam));
-    }
+        setTimeout(() => {
+            renderQRCode(targetUrl, retryCount + 1);
+        }, 250);
 
-    function closeModal() {
-        const modal = document.getElementById('classroomModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    // 課堂靜音功能：攔截 Web Audio API
-    function applyMuteState(muted) {
-        window.isClassroomMuted = muted;
-        if (window.audioCtx && window.audioCtx.state !== 'closed') {
-            try {
-                if (muted && window.audioCtx.suspend) window.audioCtx.suspend();
-                else if (!muted && window.audioCtx.resume) window.audioCtx.resume();
-            } catch(e) {}
-        }
-        if (window.AudioEngine && window.AudioEngine.ctx) {
-            try {
-                if (muted && window.AudioEngine.ctx.suspend) window.AudioEngine.ctx.suspend();
-                else if (!muted && window.AudioEngine.ctx.resume) window.AudioEngine.ctx.resume();
-            } catch(e) {}
-        }
-    }
-
-    // 當 DOM 準備完成時初始化
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initClassroomToolbar);
     } else {
-        initClassroomToolbar();
+        container.innerHTML =
+            '<p style="color:#c0392b;font-size:14px;">QR Code 模組沒有成功載入。</p>';
+        console.error('window.QRCode 未載入');
     }
-})();
+}
