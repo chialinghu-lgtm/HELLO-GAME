@@ -121,42 +121,65 @@
         } else {
             url = new URL(window.location.href);
         }
-        url.searchParams.delete('group');
-url.searchParams.delete('team');
+        // 每次產生分享網址時重新整理參數，避免沿用舊設定
+        url.search = '';
+        if (targetGroup) url.searchParams.set('group', targetGroup);
+        if (targetTeam) url.searchParams.set('team', targetTeam);
 
-if (targetGroup) url.searchParams.set('group', targetGroup);
-if (targetTeam) url.searchParams.set('team', targetTeam);
-
-// 把目前遊戲的老師設定一起加入 QR Code 網址
-if (typeof window.getClassroomShareParams === 'function') {
-    const gameParams = window.getClassroomShareParams();
-
-    if (gameParams) {
-        Object.entries(gameParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                url.searchParams.set(key, value);
+        // 讓各遊戲把老師目前的後台設定一起帶進 QR Code
+        if (typeof window.getClassroomShareParams === 'function') {
+            try {
+                const gameParams = window.getClassroomShareParams() || {};
+                Object.entries(gameParams).forEach(([key, value]) => {
+                    if (value === undefined || value === null || value === '') return;
+                    if (typeof value === 'object') value = JSON.stringify(value);
+                    url.searchParams.set(key, String(value));
+                });
+            } catch (e) {
+                console.warn('Unable to collect classroom share settings:', e);
             }
-        });
+        }
+        return url.toString();
     }
-}
 
-return url.toString();
+    function renderQRCode(targetUrl) {
+        const container = document.getElementById('crQrCodeContainer');
+        const preview = document.getElementById('crUrlPreview');
+        if (!container) return;
 
         container.innerHTML = '';
         preview.innerText = targetUrl;
 
         if (window.QRCode) {
-            qrCodeInstance = new window.QRCode(container, {
-                text: targetUrl,
-                width: 200,
-                height: 200,
-                colorDark: '#2c3e50',
-                colorLight: '#ffffff',
-                correctLevel: window.QRCode.CorrectLevel.M
-            });
-        } else {
-            container.innerHTML = '<p style="color:#7f8c8d; font-size:12px;">QR Code 模組載入中...</p>';
+            try {
+                qrCodeInstance = new window.QRCode(container, {
+                    text: targetUrl,
+                    width: 220,
+                    height: 220,
+                    colorDark: '#111827',
+                    colorLight: '#ffffff',
+                    // L 可容納較長的「老師設定」分享網址
+                    correctLevel: window.QRCode.CorrectLevel.L
+                });
+                return;
+            } catch (err) {
+                console.warn('Local QRCode renderer failed; using online fallback.', err);
+            }
         }
+
+        // 本機 QR 模組失敗時的備援
+        const img = document.createElement('img');
+        img.width = 220;
+        img.height = 220;
+        img.alt = 'QR Code';
+        img.style.display = 'block';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(targetUrl);
+        img.onerror = function () {
+            container.innerHTML = '<p style="color:#c0392b;font-size:13px;line-height:1.5;text-align:center;">QR Code 暫時無法產生。<br>請使用下方「複製連結」分享網址。</p>';
+        };
+        container.appendChild(img);
     }
 
     function updateCurrentTarget(g, t) {
