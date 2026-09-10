@@ -469,18 +469,53 @@
         }
 
         window.onload = () => {
-            reelStrips = [
-                document.getElementById('strip0'),
-                document.getElementById('strip1'),
-                document.getElementById('strip2')
-            ];
-            applySettings();
-        };
+    reelStrips = [
+        document.getElementById('strip0'),
+        document.getElementById('strip1'),
+        document.getElementById('strip2')
+    ];
+
+    loadSettingsFromUrl();
+    applySettings();
+};
 
         function togglePanel() {
             document.getElementById('teacherPanel').classList.toggle('collapsed');
         }
 
+// 提供目前設定給 QR Code
+window.getClassroomShareParams = function() {
+    return {
+        words: document.getElementById('inputWords').value.trim(),
+        time: document.getElementById('inputTimer').value,
+        speed: document.getElementById('selectSpeed').value
+    };
+};
+
+// 學生掃 QR Code 後，自動讀取老師的設定
+function loadSettingsFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    const sharedWords = params.get('words');
+    const sharedTime = params.get('time');
+    const sharedSpeed = params.get('speed');
+
+    if (sharedWords) {
+        document.getElementById('inputWords').value = sharedWords;
+    }
+
+    if (sharedTime) {
+        document.getElementById('inputTimer').value = sharedTime;
+    }
+
+    if (sharedSpeed) {
+        document.getElementById('selectSpeed').value = sharedSpeed;
+    }
+}
+
+// ↓ 原本的這個保留
+
+        
         function applySettings() {
             const rawWords = document.getElementById('inputWords').value;
             const parsed = rawWords.split(',').map(w => w.trim()).filter(w => w !== "");
