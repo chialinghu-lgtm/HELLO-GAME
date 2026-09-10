@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚾ 棒球單字接力挑戰賽 - 課堂大聯盟版</title>
+    <link rel="stylesheet" href="../css/classroom.css">
+    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/classroom-bar.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #113019 0%, #081d0f 100%);
+            background-color: #0b2211;
+            color: #fff;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 96vw;
+            max-width: 950px;
+            height: 96vh; 
+            background: rgba(10, 30, 15, 0.95);
+            border: 3px solid #f1c40f;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.8);
+            padding: 10px 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h2 { text-align: center; color: #f1c40f; text-shadow: 2px 2px 4px #000; margin: 0 0 5px 0; font-size: 20px; flex-shrink: 0; }
+        .setup-section { background: #2c3e50; padding: 15px; border-radius: 10px; text-align: center; border: 2px dashed #bdc3c7; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
+        
+        .lottery-box { background: #16a085; padding: 8px; margin: 8px 0; border-radius: 8px; font-size: 16px; font-weight: bold; display: none; border: 2px solid #fff; }
+        .lineup-number { background: #fff; color: #d35400; padding: 3px 10px; border-radius: 50%; margin: 0 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: inline-block; }
+
+        .history-board { 
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5); 
+            border: 2px solid #f1c40f; 
+            border-radius: 8px; 
+            padding: 8px 15px; 
+            text-align: left; 
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            flex: 0.5; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 70px;
+        }
+        .history-title { font-size: 13px; color: #f1c40f; font-weight: bold; margin-top: 0; border-bottom: 2px solid #f1c40f; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+        #history-list { overflow-y: auto; flex: 1; margin-top: 4px; }
+        .history-item { font-size: 12px; display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.2); padding: 3px 0; }
+        .history-score { color: #2ecc71; font-weight: bold; font-size: 14px; }
+        .no-record-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 10px; font-style: italic; }
+
+        .top-info-row { display: flex; justify-content: space-between; align-items: center; height: 35%; margin-bottom: 6px; }
+        .scoreboard { background: #000; border: 2px solid #fff; border-radius: 6px; padding: 6px 12px; display: flex; gap: 15px; text-align: center; }
+        .score-item { display: flex; flex-direction: column; }
+        .score-label { font-size: 10px; color: #f1c40f; font-weight: bold; }
+        .score-value { font-size: 26px; font-weight: bold; color: #fff; line-height: 1; }
+        
+        .field-container { position: relative; width: 140px; height: 100px; display: flex; justify-content: center; align-items: center; }
+        .baseball-diamond { width: 70px; height: 70px; border: 2px solid #fff; transform: rotate(45deg); position: relative; background: rgba(200, 100, 50, 0.4); }
+        .base { width: 16px; height: 16px; background: #fff; position: absolute; border-radius: 2px; display: flex; justify-content: center; align-items: center; }
+        .base.active { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+        .runner { transform: rotate(-45deg); font-size: 14px; }
+        #base-1 { right: -8px; top: -8px; }
+        #base-2 { left: -8px; top: -8px; }
+        #base-3 { left: -8px; bottom: -8px; }
+        #home-plate { width: 14px; height: 14px; background: #fff; position: absolute; right: -7px; bottom: -7px; clip-path: polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%); }
+
+        .stadium-view { background: rgba(0, 0, 0, 0.7); border: 2px solid #27ae60; border-radius: 8px; padding: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; overflow: hidden; }
+        .mid-battle-row { display: flex; width: 100%; flex: 1; gap: 10px; align-items: center; justify-content: space-around; overflow: hidden; }
+        
+        .left-batting-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+        .batting-zone-circle { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #f1c40f; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #2c3e50 0%, #1a252f 100%); box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); text-align: center; padding: 8px; box-sizing: border-box; }
+        .question-text-box { font-size: 15px; font-weight: bold; color: #fff; word-break: break-word; }
+        #threshold-hint { font-size: 11px; color: #ff9f43; margin-top: 4px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+
+        .right-answer-zone { flex: 1.4; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; }
+        .btn-baseball-option { background: linear-gradient(to bottom, #f39c12, #d35400); color: #fff; border: 2px solid #fff; border-radius: 8px; font-size: 14px; font-weight: bold; padding: 10px 6px; cursor: pointer; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px #a04000; }
+        .btn-baseball-option:active { transform: translateY(2px); box-shadow: 0 2px #a04000; }
+
+        .scramble-container { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; width: 100%; max-width: 340px; }
+        .ball-btn { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffff 0%, #bdc3c7 100%); color: #c0392b; font-size: 15px; font-weight: 900; border: 2px dashed #c0392b; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
+        .ball-btn:active { transform: scale(0.92); }
+        
+        .spell-control-row { display: flex; gap: 8px; margin-top: 6px; justify-content: center; width: 100%; }
+        .current-word-display { font-size: 22px; font-weight: bold; color: #f1c40f; border-bottom: 2px dashed #fff; min-height: 28px; min-width: 180px; text-align: center; margin-bottom: 3px; letter-spacing: 2px; text-shadow: 1px 1px 2px #000; }
+        .btn { color: #fff; font-weight: bold; padding: 6px 14px; font-size: 13px; border: none; border-radius: 20px; cursor: pointer; }
+        .btn-danger { background: linear-gradient(to bottom, #e74c3c 0%, #c0392b 100%); box-shadow: 0 3px #962d22; }
+        .btn-primary { background: linear-gradient(to bottom, #3498db 0%, #2980b9 100%); box-shadow: 0 3px #1f618d; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+
+        .bottom-status-zone {
+            width: 100%; background: rgba(15, 20, 15, 0.8); border-left: 5px solid #ff9f43; border-radius: 6px; padding: 6px 12px; box-sizing: border-box; margin-top: 4px; box-shadow: 3px 3px 10px rgba(0,0,0,0.4); flex-shrink: 0;
+        }
+        .status-title-label { font-size: 10px; color: #ff9f43; letter-spacing: 1px; font-weight: bold; margin-bottom: 1px; }
+        .status-marquee { color: #fff; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h2>⚾ 棒球單字接力挑戰賽 (課堂分組版)</h2>
+    
+    <div id="history-section" class="history-board">
+        <div class="history-title">
+            <span>🏆 賽事歷史精華榜 (永久記憶存檔)</span>
+            <button onclick="clearHistory()" style="background:#c0392b; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:11px; padding: 2px 6px;">清空數據</button>
+        </div>
+        <div id="history-list">
+            <div class="no-record-hint">📡 大賽即將開打，等待第一組夢幻打線誕生...</div>
+        </div>
+    </div>
+
+    <div id="setup-area" class="setup-section">
+        <h3>🏟️ 歡迎來到大聯盟總冠軍大賽現場</h3>
+        <p style="color: #2ecc71; font-weight: bold; margin: 6px 0;">✨ 已內建精選 20 道單字與文法題庫，隨時可開轟！</p>
+        
+        <div style="margin: 10px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-danger" style="background:linear-gradient(#2ecc71, #27ae60); box-shadow:0 3px #1e8449; font-size:16px; padding:10px 24px;" onclick="quickStartGame()">⚡ 一鍵極速開打 (內建題庫 + 自動排棒)</button>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.25); padding: 10px 18px; border-radius: 8px; margin-top: 10px;">
+            <p style="font-size:13px; margin: 4px 0;">或者：匯入老師專屬自訂 CSV 題目：</p>
+            <input type="file" id="csv-file" accept=".csv" style="margin: 5px 0; font-size:13px;"><br>
+            
+            <span style="font-size:13px;">設定抽出幾位同學接力：</span>
+            <select id="player-count" style="font-size:14px; padding:3px 8px; border-radius:5px;">
+                <option value="3">3 人接力</option>
+                <option value="4" selected>4 人接力</option>
+                <option value="5">5 人接力</option>
+            </select>
+            <button class="btn btn-primary" style="padding:4px 10px; margin-left:6px;" onclick="drawPlayers()">🎲 手動抽籤</button>
+            <div id="lottery-result" class="lottery-box"></div>
+            <br>
+            <button class="btn btn-danger" style="background:linear-gradient(#f1c40f, #f39c12); color:#000; box-shadow:0 3px #d35400; font-size:15px; margin-top:8px;" onclick="startGame()">📢 全員就位，開始比賽！</button>
+        </div>
+    </div>
+
+    <div id="game-area" style="display: none;">
+        <div class="top-info-row">
+            <div class="scoreboard">
+                <div class="score-item"><div class="score-label">SCORE</div><div class="score-value" id="score">0</div></div>
+                <div class="score-item"><div class="score-label">TIME LEFT</div><div class="score-value" id="timer" style="color:#ff3838;">60s</div></div>
+            </div>
+            <div class="field-container">
+                <div class="baseball-diamond">
+                    <div class="base" id="base-1"></div><div class="base" id="base-2"></div><div class="base" id="base-3"></div><div id="home-plate"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stadium-view">
+            <div style="font-size: 13px; color: #fff; text-shadow: 1px 1px 2px #000; font-weight: bold; width: 100%; text-align: left; white-space: nowrap;" id="current-batter-display">🔥 目前打擊者：正在召集隊員...</div>
+            
+            <div class="mid-battle-row">
+                <div class="left-batting-zone">
+                    <div class="batting-zone-circle"><div class="question-text-box" id="display-question">題目載入中...</div></div>
+                    <div id="threshold-hint"></div>
+                </div>
+                <div id="interaction-zone" class="right-answer-zone"></div>
+            </div>
+
+            <div class="bottom-status-zone">
+                <div class="status-title-label">📡 LIVE PLAY BALL</div>
+                <div class="status-marquee" id="play-result">比賽開始！</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DEFAULT_BASEBALL_QUESTIONS = [
+        { type: 'choice', question: 'Look at ___ grapes.', answer: 'these', options: ['this', 'these'] },
+        { type: 'choice', question: '___ soup is hot.', answer: 'That', options: ['That', 'Those'] },
+        { type: 'choice', question: "I don't ___ apples.", answer: 'like', options: ['like', 'likes'] },
+        { type: 'choice', question: 'Look at ___ olives.', answer: 'these', options: ['this', 'these'] },
+        { type: 'choice', question: '___ juice is colorful.', answer: 'that', options: ['That', 'Those'] },
+        { type: 'choice', question: "I don't like ____.", answer: 'cake', options: ['kiwi', 'cake'] },
+        { type: 'choice', question: '___ is my skirt.', answer: 'This', options: ['This', 'These'] },
+        { type: 'choice', question: '___ are his shoes.', answer: 'Those', options: ['This', 'Those'] },
+        { type: 'choice', question: '___ is her ice cream.', answer: 'That', options: ['That', 'Those'] },
+        { type: 'choice', question: 'I ___ a student.', answer: 'am', options: ['am', 'is'] },
+        { type: 'choice', question: 'He ___ English every day.', answer: 'studies', options: ['study', 'studies'] },
+        { type: 'choice', question: 'Thank you ___ much.', answer: 'so', options: ['so', 'many'] },
+        { type: 'spell', question: '大象', answer: 'elephant', options: [] },
+        { type: 'spell', question: '貓咪', answer: 'cat', options: [] },
+        { type: 'spell', question: '星期一', answer: 'monday', options: [] },
+        { type: 'spell', question: '數字 1', answer: 'one', options: [] },
+        { type: 'spell', question: '數字 2', answer: 'two', options: [] },
+        { type: 'spell', question: '數字 3', answer: 'three', options: [] },
+        { type: 'spell', question: '數字 4', answer: 'four', options: [] },
+        { type: 'spell', question: '數字 5', answer: 'five', options: [] }
+    ];
+
+    let questionBank = [...DEFAULT_BASEBALL_QUESTIONS]; 
+    let currentQuestion = null; let currentQuestionIndex = 0; let score = 0; let bases = [0, 0, 0];    
+    let drawnPlayers = []; let currentBatterOrder = 0; let timeLeft = 60; let gameInterval = null; let pitchStartTime = 0;   
+    let playerSpelledWord = []; 
+    
+    let matchHistory = JSON.parse(localStorage.getItem('baseballMatchHistory') || '[]');
+    let acceptingAnswers = false;
+    let nextPitchTimeout = null;
+    
+    const runnerEmojis = ['👦', '👧', '🦊', '🦁', '🐯', '🐼', '🐸', '🐨'];
+
+    const AudioEngine = {
+        ctx: null,
+        init() { 
+            if (window.isClassroomMuted) return;
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+                window.AudioEngine = this;
+            }
+        },
+        playHit() {
+            if (window.isClassroomMuted) return;
+            this.init(); if (!this.ctx) return; const t = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(150, t + 0.1);
+            gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.1);
+        },
+        playHomeRun() {
+            if (window.isClassroomMuted) return;
+            this.init(); if (!this.ctx) return; const t = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(250, t); osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
+            gain.gain.setValueAtTime(0.8, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.15);
+            
+            const bufferSize = this.ctx.sampleRate * 1.5; const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+            const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.0, t); noiseGain.gain.linearRampToValueAtTime(0.3, t + 0.2); noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 1.4);
+            noise.connect(noiseGain); noiseGain.connect(this.ctx.destination); noise.start(t); noise.stop(t + 1.5);
+        },
+        playMiss() {
+            if (window.isClassroomMuted) return;
+            this.init(); if (!this.ctx) return; const t = this.ctx.currentTime;
+            const osc1 = this.ctx.createOscillator(); const osc2 = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(130, t); osc1.frequency.setValueAtTime(110, t + 0.12);
+            osc2.type = 'square'; osc2.frequency.setValueAtTime(132, t); osc2.frequency.setValueAtTime(112, t + 0.12);
+            gain.gain.setValueAtTime(0.4, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            osc1.connect(gain); osc2.connect(gain); gain.connect(this.ctx.destination);
+            osc1.start(t); osc2.start(t); osc1.stop(t + 0.3); osc2.stop(t + 0.3);
+        },
+        playGameOver() {
+            if (window.isClassroomMuted) return;
+            this.init(); if (!this.ctx) return; const t = this.ctx.currentTime;
+            [180, 220, 270].forEach((f) => {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(f, t);
+                gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0.2, t + 0.4); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+                osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.6);
+            });
+        }
+    };
+
+    document.getElementById('csv-file').addEventListener('change', function(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader(); reader.onload = function(event) { parseCSV(event.target.result); }; reader.readAsText(file, 'UTF-8'); 
+    });
+
+    function parseCSVLine(line) {
+        const result = []; let current = ''; let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"' && line[i + 1] === '"') { current += '"'; i++; }
+            else if (char === '"') { inQuotes = !inQuotes; }
+            else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+            else { current += char; }
+        }
+        result.push(current.trim()); return result;
+    }
+
+    function parseCSV(text) {
+        let newBank = []; const lines = text.replace(/\r/g, '').split('\n');
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim(); if (!line) continue;
+            const columns = parseCSVLine(line); if (columns.length < 3) continue;
+            let type = columns[0].trim().toLowerCase(); const question = columns[1].trim(); const answer = columns[2].trim();
+            if (!question || !answer) continue;
+            let options = columns[3] ? columns[3].split('|').map(o => o.trim()).filter(Boolean) : [];
+            if (type === 'fill') { type = options.length > 0 ? 'choice' : 'spell'; }
+            if (!['choice', 'spell'].includes(type)) continue;
+            newBank.push({ type, question, answer, options });
+        }
+        if (newBank.length > 0) { 
+            questionBank = newBank;
+            questionBank.sort(() => Math.random() - 0.5); 
+            alert(`🎉 成功智慧匯入 ${questionBank.length} 道題目！`); 
+        } else { 
+            alert('沒有讀到有效題目，請檢查 CSV 格式。'); 
+        }
+    }
+
+    function drawPlayers() {
+        try {
+            AudioEngine.init();
+            const count = parseInt(document.getElementById('player-count').value);
+            let pool = []; for (let i = 1; i <= 30; i++) pool.push(i); 
+            for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+            drawnPlayers = pool.slice(0, count); 
+            const resultBox = document.getElementById('lottery-result');
+            if (resultBox) { resultBox.style.display = 'block'; let numberHtml = drawnPlayers.map(num => `<span class="lineup-number">${num}號</span>`).join(' ➔ '); resultBox.innerHTML = `🎯 <b>本日夢幻打線：</b>${numberHtml}`; }
+        } catch (error) { alert("抽籤發生錯誤：" + error.message); }
+    }
+
+    function quickStartGame() {
+        if (questionBank.length === 0) questionBank = [...DEFAULT_BASEBALL_QUESTIONS];
+        drawPlayers();
+        startGame();
+    }
+
+    function startGame() {
+        if (questionBank.length === 0) { alert('請先匯入題目 CSV 檔案！'); return; }
+        if (drawnPlayers.length === 0) { drawPlayers(); }
+        
+        AudioEngine.init();
+        if (nextPitchTimeout) clearTimeout(nextPitchTimeout);
+        
+        score = 0; timeLeft = 60; bases = [0, 0, 0]; currentQuestionIndex = 0; currentBatterOrder = 0;
+        document.getElementById('timer').innerText = '60s'; document.getElementById('setup-area').style.display = 'none'; document.getElementById('game-area').style.display = 'block';
+        updateScoreboard(); nextPitch();
+        if (gameInterval) clearInterval(gameInterval);
+        gameInterval = setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft + 's'; if (timeLeft <= 0) { clearInterval(gameInterval); endGame(); } }, 1000);
+    }
+
+    function nextPitch() {
+        if (timeLeft <= 0) return;
+        acceptingAnswers = true;
+        
+        if (currentQuestionIndex >= questionBank.length) { questionBank.sort(() => Math.random() - 0.5); currentQuestionIndex = 0; }
+        currentQuestion = questionBank[currentQuestionIndex]; currentQuestionIndex++;
+        let currentBatterNumber = drawnPlayers[currentBatterOrder];
+        document.getElementById('current-batter-display').innerHTML = `🔥 目前打擊者：<span style="font-size:14px; color:#00ff00; background:rgba(0,0,0,0.6); padding:1px 10px; border-radius:10px; border:1px solid #00ff00; display:inline-block; white-space:nowrap;">${currentBatterNumber} 號同學</span>`;
+        currentBatterOrder = (currentBatterOrder + 1) % drawnPlayers.length;
+        
+        let wordLength = currentQuestion.answer.length; 
+        let hrLimit = Math.min(3.5, Math.max(2.2, wordLength * 0.4)).toFixed(1); 
+        let doubleLimit = Math.max(5, wordLength * 1.0).toFixed(1);
+        
+        if (currentQuestion.type === 'choice') document.getElementById('threshold-hint').innerText = "⚡ 選擇題：限時揮棒！(最高二壘安打)";
+        else document.getElementById('threshold-hint').innerText = `⏱️ HR≤${hrLimit}s | 2B≤${doubleLimit}s`;
+        document.getElementById('display-question').innerText = currentQuestion.question;
+        const zone = document.getElementById('interaction-zone'); zone.innerHTML = ''; 
+
+        if (currentQuestion.type === 'choice') {
+            const grid = document.createElement('div'); grid.className = 'options-grid';
+            let allOptions = currentQuestion.options.length > 0 ? [...currentQuestion.options] : [currentQuestion.answer, '選項A', '選項B', '選項C'];
+            if (!allOptions.map(o => o.toLowerCase()).includes(currentQuestion.answer.toLowerCase())) {
+                allOptions.push(currentQuestion.answer);
+            }
+            let uniqueOptions = []; let seen = new Set();
+            allOptions.forEach(opt => {
+                let lower = opt.toLowerCase(); if (!seen.has(lower)) { seen.add(lower); uniqueOptions.push(opt); }
+            });
+            uniqueOptions.sort(() => Math.random() - 0.5);
+            uniqueOptions.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'btn-baseball-option'; btn.innerText = opt; btn.onclick = () => checkAnswer(opt); grid.appendChild(btn);
+            });
+            zone.appendChild(grid);
+        } else {
+            playerSpelledWord = []; 
+            const wordDisplay = document.createElement('div'); wordDisplay.className = 'current-word-display'; wordDisplay.id = 'word-display'; wordDisplay.innerText = "_"; zone.appendChild(wordDisplay);
+            const scrambleZone = document.createElement('div'); scrambleZone.className = 'scramble-container';
+            
+            let lettersArray = currentQuestion.answer.split('').map((char, index) => { return { id: 'letter_' + index, char: char }; });
+            lettersArray.sort(() => Math.random() - 0.5);
+            lettersArray.forEach(item => {
+                const ball = document.createElement('button'); ball.className = 'ball-btn'; ball.id = item.id; ball.innerText = item.char;
+                ball.onclick = () => {
+                    if (!acceptingAnswers) return;
+                    playerSpelledWord.push({ id: item.id, char: item.char });
+                    wordDisplay.innerText = playerSpelledWord.map(w => w.char).join('');
+                    ball.style.visibility = 'hidden';
+                    if (playerSpelledWord.length === currentQuestion.answer.length) { checkAnswer(playerSpelledWord.map(w => w.char).join('')); }
+                };
+                scrambleZone.appendChild(ball);
+            });
+            zone.appendChild(scrambleZone);
+
+            const controlRow = document.createElement('div'); controlRow.className = 'spell-control-row';
+            const backspaceBtn = document.createElement('button'); backspaceBtn.className = 'btn btn-primary'; backspaceBtn.innerText = '⬅️ 刪退';
+            backspaceBtn.onclick = () => {
+                if (playerSpelledWord.length > 0) {
+                    let popped = playerSpelledWord.pop(); document.getElementById(popped.id).style.visibility = 'visible';
+                    wordDisplay.innerText = playerSpelledWord.length > 0 ? playerSpelledWord.map(w => w.char).join('') : "_";
+                }
+            };
+            const resetBtn = document.createElement('button'); resetBtn.className = 'btn btn-danger'; resetBtn.innerText = '🔄 重拼';
+            resetBtn.onclick = () => {
+                playerSpelledWord = []; wordDisplay.innerText = "_"; document.querySelectorAll('.ball-btn').forEach(b => b.style.visibility = 'visible');
+            };
+            controlRow.appendChild(backspaceBtn); controlRow.appendChild(resetBtn); zone.appendChild(controlRow);
+        }
+        pitchStartTime = new Date().getTime();
+    }
+
+    function checkAnswer(playerAnswer) {
+        if (!acceptingAnswers) return; 
+        acceptingAnswers = false; 
+
+        const endTime = new Date().getTime(); const secondsUsed = (endTime - pitchStartTime) / 1000; const wordLength = currentQuestion.answer.length;
+        let hrThreshold = Math.min(3.5, Math.max(2.2, wordLength * 0.4));
+        let doubleThreshold = Math.max(5, wordLength * 1.0);
+        
+        const isCorrect = playerAnswer.toLowerCase() === currentQuestion.answer.toLowerCase();
+
+        if (!isCorrect) {
+            AudioEngine.playMiss();
+            timeLeft = Math.max(0, timeLeft - 5); document.getElementById('timer').innerText = timeLeft + 's';
+            document.getElementById('play-result').innerHTML = `❌ <span style="color: #ff3838;">揮棒落空！沒收 5 秒！</span><br><span style="font-size:13px; color:#aaa;">(正確答案: ${currentQuestion.answer})</span>`;
+        } else {
+            let hitType;
+            if (currentQuestion.type === 'choice') {
+                hitType = secondsUsed <= 2.2 ? 2 : 1;
+            } else {
+                hitType = secondsUsed <= hrThreshold ? 4 : (secondsUsed <= doubleThreshold ? 2 : 1);
+            }
+            
+            if (hitType === 4) AudioEngine.playHomeRun();
+            else AudioEngine.playHit();
+
+            processHit(hitType);
+            const hitText = {
+                1: `⚾ <span style="color: #2ecc71;">一壘安打！</span> 穿越內野防線！(${secondsUsed.toFixed(1)}s)`,
+                2: `🚀 <span style="color: #3498db;">二壘安打！</span> 外野強勁長打！(${secondsUsed.toFixed(1)}s)`,
+                4: `🔥 <span style="color: #f1c40f; font-size: 20px;">💥 驚天全壘打！</span> 球飛出牆外了！(${secondsUsed.toFixed(1)}s)`
+            };
+            document.getElementById('play-result').innerHTML = hitText[hitType];
+        }
+        
+        updateScoreboard(); 
+        if (timeLeft <= 0) { endGame(); return; }
+
+        document.getElementById('interaction-zone').innerHTML = '<h4 style="color:#aaa; margin:2px 0;">⚾ 主審換球中...</h4>'; 
+        nextPitchTimeout = setTimeout(nextPitch, 800);
+    }
+
+    function processHit(hitType) {
+        const newBases = [0, 0, 0]; let runs = 0;
+        for (let i = 0; i < bases.length; i++) {
+            if (bases[i] !== 0) {
+                const newPosition = i + hitType;
+                if (newPosition >= 3) { runs++; }
+                else { newBases[newPosition] = bases[i]; }
+            }
+        }
+        if (hitType >= 4) { runs++; }
+        else { newBases[hitType - 1] = runnerEmojis[Math.floor(Math.random() * runnerEmojis.length)]; }
+        score += runs; bases = newBases;
+    }
+
+    function updateScoreboard() { document.getElementById('score').innerText = score; updateBaseVisual('base-1', bases[0]); updateBaseVisual('base-2', bases[1]); updateBaseVisual('base-3', bases[2]); }
+    function updateBaseVisual(elementId, baseState) { const baseEl = document.getElementById(elementId); if (baseEl) { if (baseState !== 0) { baseEl.classList.add('active'); baseEl.innerHTML = `<span class="runner">${baseState}</span>`; } else { baseEl.classList.remove('active'); baseEl.innerHTML = ''; } } }
+    
+    function endGame() { 
+        AudioEngine.playGameOver();
+        if (gameInterval) clearInterval(gameInterval); 
+        if (nextPitchTimeout) clearTimeout(nextPitchTimeout);
+        acceptingAnswers = false;
+
+        let currentLineupStr = drawnPlayers.join(', '); 
+        matchHistory.push({ lineup: currentLineupStr, matchScore: score, time: new Date().toLocaleString('zh-TW') }); 
+        
+        localStorage.setItem('baseballMatchHistory', JSON.stringify(matchHistory));
+        
+        alert(`🏁 時間到！\n本輪總共獲得：${score} 分！`); 
+        renderHistoryBoard(); 
+        document.getElementById('game-area').style.display = 'none'; 
+        document.getElementById('setup-area').style.display = 'block'; 
+    }
+    
+    function renderHistoryBoard() {
+        const historyList = document.getElementById('history-list'); if (!historyList) return;
+        if (matchHistory.length === 0) { historyList.innerHTML = '<div class="no-record-hint">📡 大賽即將開打，等待第一組夢幻打線誕生...</div>'; return; }
+        historyList.innerHTML = ''; 
+        matchHistory.forEach((match, index) => {
+            const item = document.createElement('div'); item.className = 'history-item';
+            item.innerHTML = `<div><span style="color:#aaa;">#${index + 1}</span> <span style="color:#fff; font-weight:bold;">[ ${match.lineup} 號 ]</span> <span style="font-size:11px; color:#666;">(${match.time || '前次紀錄'})</span></div><div class="history-score">${match.matchScore} 分</div>`;
+            historyList.appendChild(item);
+        });
+    }
+    
+    function clearHistory() { 
+        if (confirm("確定要清空『所有的歷史比賽紀錄』嗎？這將無法復原喔！")) { 
+            matchHistory = []; localStorage.removeItem('baseballMatchHistory'); renderHistoryBoard(); 
+        } 
+    }
+
+    renderHistoryBoard();
+</script>
+</body>
+</html>
