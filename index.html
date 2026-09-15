@@ -461,10 +461,10 @@
 
     <!-- 篩選列 -->
     <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterGames('all')">🌟 全部遊戲 (9)</button>
+        <button class="filter-btn active" onclick="filterGames('all')">🌟 全部遊戲 (10)</button>
         <button class="filter-btn" onclick="filterGames('battle')">⚔️ 分組拔河對抗 (3)</button>
         <button class="filter-btn" onclick="filterGames('board')">🎲 派對棋盤桌遊 (2)</button>
-        <button class="filter-btn" onclick="filterGames('speed')">⚡ 速度反應與接力 (4)</button>
+        <button class="filter-btn" onclick="filterGames('speed')">⚡ 速度反應與接力 (5)</button>
     </div>
 
     <!-- 遊戲卡片列表 -->
@@ -642,7 +642,19 @@
                 desc: "學生閉上眼睛！老師或組長隨機藏好神秘目標單字，全班依序翻開卡片，猜猜看誰能在最少次數內找出正解！",
                 features: ["隨機隱藏目標", "自訂提問標題", "翻牌回饋特效", "課堂暖身首選"],
                 url: "./games/tap-and-guess.html"
-            }
+            },
+            {
+    id: "tic-tac-toe",
+    title: "接力九宮格",
+    category: "speed",
+    tag: "雙隊搶答對戰",
+    tagClass: "tag-speed",
+    icon: "⭕❌",
+    iconBg: "linear-gradient(135deg, #667eea, #764ba2)",
+    desc: "兩隊同時搶答！答對取得擺棋權，只有 5 秒可以放入圈叉，率先連成一線獲勝！",
+    features: ["雙隊同步搶答", "5秒擺棋", "圈叉九宮格", "老師自訂題庫"],
+    url: "./games/Tic-Tac-Toe_QR_Only5secPlacement.html"
+}
         ];
 
         let activeGame = null;
