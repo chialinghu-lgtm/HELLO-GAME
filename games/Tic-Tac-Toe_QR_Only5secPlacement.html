@@ -554,7 +554,7 @@ fish:魚</textarea>
   let timerInterval = null;
   let timeLeft = 15;
   let placementTimerInterval = null;
-  let placementTimeLeft = 5;
+  let placementTimeLeft = 10;
 
   let clozeData = { chars: [], indices: [], missing: [], options: [] };
   let choiceData = []; 
@@ -910,7 +910,7 @@ fish:魚</textarea>
 
   function startPlacementTimer() {
     clearInterval(placementTimerInterval);
-    placementTimeLeft = 5;
+    placementTimeLeft = 10;
     document.getElementById('timerDisplay').innerText = `⏳ 擺棋 ${placementTimeLeft}`;
 
     placementTimerInterval = setInterval(() => {
