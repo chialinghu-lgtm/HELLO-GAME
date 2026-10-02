@@ -121,49 +121,127 @@
         } else {
             url = new URL(window.location.href);
         }
-        url.searchParams.delete('group');
-        url.searchParams.delete('team');
+        // 每次產生分享網址時重新整理參數，避免沿用舊設定
+        url.search = '';
         if (targetGroup) url.searchParams.set('group', targetGroup);
         if (targetTeam) url.searchParams.set('team', targetTeam);
+
+        // 讓各遊戲把老師目前的後台設定一起帶進 QR Code
+        if (typeof window.getClassroomShareParams === 'function') {
+            try {
+                const gameParams = window.getClassroomShareParams() || {};
+                Object.entries(gameParams).forEach(([key, value]) => {
+                    if (value === undefined || value === null || value === '') return;
+                    if (typeof value === 'object') value = JSON.stringify(value);
+                    url.searchParams.set(key, String(value));
+                });
+            } catch (e) {
+                console.warn('Unable to collect classroom share settings:', e);
+            }
+        }
         return url.toString();
     }
 
-    function renderQRCode(targetUrl, retryCount = 0) {
-    const container = document.getElementById('crQrCodeContainer');
-    const preview = document.getElementById('crUrlPreview');
-    if (!container) return;
+    function renderQRCode(targetUrl) {
+        const container = document.getElementById('crQrCodeContainer');
+        const preview = document.getElementById('crUrlPreview');
+        if (!container) return;
 
-    preview.innerText = targetUrl;
-
-    if (window.QRCode) {
         container.innerHTML = '';
+        preview.innerText = targetUrl;
 
-        try {
-            qrCodeInstance = new window.QRCode(container, {
-                text: targetUrl,
-                width: 220,
-                height: 220,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: window.QRCode.CorrectLevel.M
-            });
-        } catch (err) {
-            console.error('QR Code 產生失敗：', err);
-            container.innerHTML =
-                '<p style="color:#c0392b;font-size:14px;">QR Code 產生失敗，請重新整理頁面。</p>';
+        if (window.QRCode) {
+            try {
+                qrCodeInstance = new window.QRCode(container, {
+                    text: targetUrl,
+                    width: 220,
+                    height: 220,
+                    colorDark: '#111827',
+                    colorLight: '#ffffff',
+                    // L 可容納較長的「老師設定」分享網址
+                    correctLevel: window.QRCode.CorrectLevel.L
+                });
+                return;
+            } catch (err) {
+                console.warn('Local QRCode renderer failed; using online fallback.', err);
+            }
         }
 
-    } else if (retryCount < 20) {
-        container.innerHTML =
-            '<p style="color:#7f8c8d;font-size:12px;">QR Code 模組載入中...</p>';
-
-        setTimeout(() => {
-            renderQRCode(targetUrl, retryCount + 1);
-        }, 250);
-
-    } else {
-        container.innerHTML =
-            '<p style="color:#c0392b;font-size:14px;">QR Code 模組沒有成功載入。</p>';
-        console.error('window.QRCode 未載入');
+        // 本機 QR 模組失敗時的備援
+        const img = document.createElement('img');
+        img.width = 220;
+        img.height = 220;
+        img.alt = 'QR Code';
+        img.style.display = 'block';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(targetUrl);
+        img.onerror = function () {
+            container.innerHTML = '<p style="color:#c0392b;font-size:13px;line-height:1.5;text-align:center;">QR Code 暫時無法產生。<br>請使用下方「複製連結」分享網址。</p>';
+        };
+        container.appendChild(img);
     }
-}
+
+    function updateCurrentTarget(g, t) {
+        currentGroup = g || '';
+        currentTeam = t || '';
+        const targetUrl = getCleanPageUrl(currentGroup, currentTeam);
+        renderQRCode(targetUrl);
+
+        // 更新徽章文字
+        const badge = document.getElementById('crGroupBadge');
+        if (badge) {
+            badge.className = 'classroom-group-badge';
+            if (currentGroup) {
+                badge.innerText = `🎯 第 ${currentGroup} 組`;
+            } else if (currentTeam === 'blue') {
+                badge.innerText = `🔵 藍隊`;
+                badge.classList.add('team-blue');
+            } else if (currentTeam === 'red') {
+                badge.innerText = `🔴 紅隊`;
+                badge.classList.add('team-red');
+            } else {
+                badge.innerText = `👥 設定組別`;
+            }
+        }
+
+        // 更新網址歷史（不刷新頁面）
+        window.history.replaceState({}, '', targetUrl);
+    }
+
+    function openModal() {
+        const modal = document.getElementById('classroomModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        renderQRCode(getCleanPageUrl(currentGroup, currentTeam));
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('classroomModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // 課堂靜音功能：攔截 Web Audio API
+    function applyMuteState(muted) {
+        window.isClassroomMuted = muted;
+        if (window.audioCtx && window.audioCtx.state !== 'closed') {
+            try {
+                if (muted && window.audioCtx.suspend) window.audioCtx.suspend();
+                else if (!muted && window.audioCtx.resume) window.audioCtx.resume();
+            } catch(e) {}
+        }
+        if (window.AudioEngine && window.AudioEngine.ctx) {
+            try {
+                if (muted && window.AudioEngine.ctx.suspend) window.AudioEngine.ctx.suspend();
+                else if (!muted && window.AudioEngine.ctx.resume) window.AudioEngine.ctx.resume();
+            } catch(e) {}
+        }
+    }
+
+    // 當 DOM 準備完成時初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initClassroomToolbar);
+    } else {
+        initClassroomToolbar();
+    }
+})();
